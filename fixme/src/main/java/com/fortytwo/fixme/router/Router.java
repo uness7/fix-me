@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class Router {
     private static final int BUFFER_SIZE = 1024;
@@ -22,35 +24,36 @@ public class Router {
         return instance;
     }
 
+    private String getUniqueId() {
+        return UUID.randomUUID().toString();
+    }
+
+    private String getChecksum(int len) {
+        return Integer.toString(len % 20);
+    }
+
+    private void handleBroker(Socket socket) throws IOException {
+        // the first key-value is the msgType(35), ID refers to first message sent by the Router communicating the ID
+        OutputStream out = socket.getOutputStream();
+        String initMessage = "35=ID|56=" + getUniqueId() + "|10=";
+        String firstMessage = initMessage + getChecksum(initMessage.length());
+        out.write(firstMessage.getBytes());
+    }
+
     public void listen(int port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
-                System.out.println("Listening on port " + serverSocket.getLocalPort());
                 try (Socket socket = serverSocket.accept()) {
-                    System.out.println("Accepted connection from " + socket.getInetAddress());
+                    System.out.println("Listening on port " + socket.getLocalPort());
                     if (socket.isConnected()) {
-                        // accept BROKER tcp connections
+                        System.out.println("Accepted connection from a Broker " + socket.getInetAddress());
                         if (socket.getLocalPort() == BROKER_PORT) {
-                            int recvMsgSize = 0;
-                            byte[] recvBuffer = new byte[BUFFER_SIZE];
-                            InputStream inputStream = socket.getInputStream();
-                            OutputStream outputStream = socket.getOutputStream();
-                            while ((recvMsgSize = inputStream.read(recvBuffer)) > 0) {
-                                outputStream.write(recvBuffer, 0, recvMsgSize);
-                            }
-                            System.out.println("Received from broker" + new String(recvBuffer));
+                            System.out.println("Handling a Broker " + socket.getInetAddress());
+                            handleBroker(socket);
                         } else if (socket.getLocalPort() == MARKET_PORT) {
-                            // accept MARKET tcp connections
-                            int recvMsgSize = 0;
-                            byte[] recvBuffer = new byte[BUFFER_SIZE];
-                            InputStream inputStream = socket.getInputStream();
-                            OutputStream outputStream = socket.getOutputStream();
-                            while ((recvMsgSize = inputStream.read(recvBuffer)) > 0) {
-                                outputStream.write(recvBuffer, 0, recvMsgSize);
-                            }
-                            System.out.println("Received from Market" + new String(recvBuffer));
+                            handleMarket(socket);
                         } else {
-                            throw new IllegalStateException("Something is wrong");
+                            throw new IllegalStateException("Invalid port " + socket.getLocalPort());
                         }
                     }
                 }
@@ -58,5 +61,8 @@ public class Router {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void handleMarket(Socket socket) {
     }
 }

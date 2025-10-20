@@ -1,0 +1,90 @@
+Router will listen for tcp connections coming from Brokers and Markets
+Market has a list of instruments. We are going to be use the following list of stocks that are tradable:
+    🟢 Equity Instruments (Stocks)
+    Individual company shares — simplest to simulate.
+    Examples:
+    AAPL – Apple Inc.
+    MSFT – Microsoft Corp.
+    AMZN – Amazon.com Inc.
+    GOOGL – Alphabet Inc.
+    TSLA – Tesla Inc.
+    NVDA – Nvidia Corp.
+    META – Meta Platforms
+    JPM – JPMorgan Chase
+    NFLX – Netflix Inc.
+    KO – Coca-Cola Co.
+
+Market has a name like "NASDAQ" or "New York Stock Exchange NYSE", and the number of available instruments.
+We will be using NASDAQ as our Market, andthe following will
+be used as shares or instruments that are exclusive to the chosen market.
+
+| Symbol    | Company Name              | Sector                 |
+| --------- | ------------------------- | ---------------------- |
+| **AAPL**  | Apple Inc.                | Technology             |
+| **MSFT**  | Microsoft Corp.           | Technology             |
+| **AMZN**  | Amazon.com Inc.           | Consumer Discretionary |
+| **GOOGL** | Alphabet Inc. (Class A)   | Communication Services |
+| **GOOG**  | Alphabet Inc. (Class C)   | Communication Services |
+| **TSLA**  | Tesla Inc.                | Consumer Discretionary |
+| **NVDA**  | NVIDIA Corp.              | Technology             |
+| **META**  | Meta Platforms Inc.       | Communication Services |
+| **NFLX**  | Netflix Inc.              | Communication Services |
+| **ADBE**  | Adobe Inc.                | Technology             |
+| **INTC**  | Intel Corp.               | Technology             |
+| **CSCO**  | Cisco Systems Inc.        | Technology             |
+| **AMD**   | Advanced Micro Devices    | Technology             |
+| **PEP**   | PepsiCo Inc.              | Consumer Staples       |
+| **PYPL**  | PayPal Holdings Inc.      | Financial Technology   |
+| **COST**  | Costco Wholesale Corp.    | Consumer Staples       |
+| **QCOM**  | Qualcomm Inc.             | Technology             |
+| **TXN**   | Texas Instruments Inc.    | Technology             |
+| **AVGO**  | Broadcom Inc.             | Semiconductors         |
+| **AMAT**  | Applied Materials Inc.    | Semiconductors         |
+| **SBUX**  | Starbucks Corp.           | Consumer Discretionary |
+| **BKNG**  | Booking Holdings Inc.     | Consumer Services      |
+| **INTU**  | Intuit Inc.               | Financial Technology   |
+| **MRNA**  | Moderna Inc.              | Biotechnology          |
+| **REGN**  | Regeneron Pharmaceuticals | Biotechnology          |
+| **VRTX**  | Vertex Pharmaceuticals    | Biotechnology          |
+
+An instrument can be either traded or not in the market.
+
+Market and Broker(s) are the clients, Router is the server.
+
+An input file can include a list of instruments and we will feed it to our simulator. So we will have to do some
+parsing to create this LinkedList<Instrument>. The market will use this list as its database.
+
+An Instrument class will contain the following fields: name, sector and company name, price, isTraded,
+and finally quantity. The Instrument quantity's unit is Share (one unit of ownership).
+For instance, "symbol": "AAPL", "quantity_unit": "share"
+
+We will be using the FIX Checksum (sum of bytes mod 256). Checksum can also be as simple as verifying
+the number of bytes sent is the same as received.
+So, the Message will contain message in fix format + checksum data
+
+Scenario of the simulation: a broker needs to buy a lot of 100 shares of AMAT instrument from
+Applied Materials inc.
+
+1. create a Broker instance(s) (can be either institutions, or individuals)
+2. create a Market instance and call it NASDAQ
+3. make requests containing the message (i.e. Request req = broker.request(message);)
+So, data that will be sent from brokers to markets is of type Request
+4. market upon reception of the request will create a thread using the JaveExecutorFramework and will either
+accept or reject the request, if accepted we sent the client a positive response and update the Market's instrument
+list quantity otherwise we send a negative response.
+
+Regarding the chain-of-responsibility design pattern, it will be useful to implement the router upon client's
+connections received. It will validate the message based on the checksum, and recognize the destination market
+and then forward the message.
+
+The Message class could make use of an enum class to represent the different types of messages that can be used
+by both brokers and markets. For instance, enum { REJECTED, EXECUTED, BUY, SELL }.
+If it's a broker, he can only use BUY, SELL types. Otherwise, he can use REJECTED or EXECUTED.
+
+The Router must accept connections from multiple brokers and markets. This sentence indicates that the Router
+is the Server awaiting connections from both ends and based on who omitted the data, the Router behaves
+correspondingly.
+
+The design of this project should make us able to easily test and mock each component. Furthermore,
+we should be able to be able to extend it; create new different markets and different brokers. We could
+use the factory method design pattern here.
