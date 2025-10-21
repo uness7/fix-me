@@ -38,14 +38,7 @@ public class Router {
     private void handleMarket(Socket socket) {
         int dataLength = 5;
         byte[] data = new byte[dataLength];
-
-        try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
-            in.read(data, 0, dataLength);
-            String message = new String(data, 0, dataLength);
-            System.out.println("Message received from broker: " + message);
-        } catch (IOException e) {
-            System.out.println("Exception occurred " + e.getMessage());
-        }
+        recv(socket, 20);
     }
 
     private void sendAck(Socket socket) throws IOException {
@@ -61,25 +54,49 @@ public class Router {
     private void wait(Socket socket) {
         // listening for data coming from brokers, the message should include
         //      the ID previously assigned to each client
+        int dataLength = 0;
+        byte[] data = new byte[dataLength];
         if (socket.isConnected()) {
             // waiting for buy or sell requests from the Broker
+            recv(socket, 5);
+        }
+        this.messageType = MessageType.IDLE;
+    }
+
+    private void recv(Socket socket, int dataLength) {
+        byte[] data = new byte[dataLength];
+
+        try (DataInputStream in = new DataInputStream(socket.getInputStream())) {
+            in.read(data, 0, dataLength);
+            String message = new String(data, 0, dataLength);
+            System.out.println("Message received from broker: " + message);
+        } catch (IOException e) {
+            System.out.println("Exception occurred " + e.getMessage());
         }
     }
 
-    private void handleBrokers(Socket socket) throws IllegalArgumentException {
+    private void handleBrokers(Socket socket) {
         // ISSUE: once ack message is sent, the thread goes idle since we exit this function
         if (socket.isConnected()) {
-            if (this.messageType == MessageType.ACK) {
-                try {
-                    sendAck(socket);
-                } catch (IOException e) {
-                    System.out.println("Exception occurred " + e.getMessage());
+            while (true) {
+                if (this.messageType == MessageType.ACK) {
+                    try {
+                        sendAck(socket);
+                    } catch (IOException e) {
+                        System.out.println("Exception occurred " + e.getMessage());
+                    }
+                } else if (this.messageType == MessageType.ORDINARY) {
+                    System.out.println("Ordinary message received");
+                    wait(socket);
+                } else if (this.messageType == MessageType.IDLE) {
+                    try {
+                        System.out.println("Socket closed");
+                        socket.close();
+                        break ;
+                    } catch (IOException e) {
+                        System.out.println("Exception occurred " + e.getMessage());
+                    }
                 }
-            } else if (this.messageType == MessageType.ORDINARY) {
-                System.out.println("Ordinary message received");
-                wait(socket);
-            } else {
-                throw new IllegalArgumentException("Unknown message type " + this.messageType);
             }
         }
     }
