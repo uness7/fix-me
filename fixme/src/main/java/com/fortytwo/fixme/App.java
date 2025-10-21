@@ -6,11 +6,10 @@ import com.fortytwo.fixme.common.Instrument;
 import com.fortytwo.fixme.router.Router;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedList;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class App {
     private volatile static LinkedList<Instrument> instruments = new LinkedList<>();
@@ -37,23 +36,28 @@ public class App {
     }
 
     public static void launchSimulator() {
-        Broker broker = new Broker("Broker12");
         Router router = Router.getInstance();
-        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
-            Runnable task1 = () -> router.listen(router.BROKER_PORT);
-            Runnable task2 = () -> {
-                try {
-                    broker.start();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            };
-            executor.submit(task1);
-            executor.submit(task2);
-        }
+        router.activate();
     }
 
-    public static void main( String[] args ) {
-        launchSimulator();
+    public static void main( String[] args ) throws IOException {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Runnable t1 = App::launchSimulator;
+        Runnable t2 = () -> {
+            Broker br = new Broker("br");
+            try {
+                br.init();
+                Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+                br.listenForAckMessage();
+
+                if (br.getUniqueId() != -1) {
+                    br.sendBuyRequest("Hello");
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        executor.submit(t1);
+        executor.submit(t2);
     }
 }

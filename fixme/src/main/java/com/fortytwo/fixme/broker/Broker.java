@@ -2,6 +2,7 @@ package com.fortytwo.fixme.broker;
 
 import com.fortytwo.fixme.router.Router;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,7 +15,7 @@ public class Broker {
     private final int PORT = Router.getInstance().BROKER_PORT;
     private final String name;
     private Socket socket = null;
-    private long uniqueId = -1;
+    private long uniqueId = 1;
 
     public Broker(String name) {
         this.name = name;
@@ -38,19 +39,32 @@ public class Broker {
     }
 
     public void listenForAckMessage() throws IOException {
-        final int dataLength = 19;
+        final int dataLength = 21;
+        byte[] data = new byte[dataLength];
+
         if (socket.isConnected()) {
-            System.out.println("Listening for acknowledgement");
-            InputStream in = socket.getInputStream();
-            byte[] data = in.readNBytes(dataLength);
-            String message = new String(data, 0, dataLength);
-            if (message.contains("35=ID|56=")) {
-                message = message.replace("35=ID|56=", "");
-                message = message.substring(0, 5);
-                this.uniqueId = Long.parseLong(message, 16);
-                System.out.println("Unique Id received from Router : " + uniqueId);
-                socket.close();
-            }
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            OutputStream out = socket.getOutputStream();
+            in.read(data, 0, dataLength);
+
+            String message = new String(data);
+            System.out.println("Broker received  " + message);
+            System.out.println("Broker received an Id.");
+
+            out.flush();
+            //in.close();
+            //out.close();
+        }
+        System.out.println("Exiting ackMessage()");
+    }
+
+    public void sendBuyRequest(String message) throws IOException {
+        System.out.println("Sending request to broker " + message);
+        if (socket.isConnected()  && this.uniqueId != -1) {
+            System.out.println("We can send a buy request under these circumstances. " + message);
+            OutputStream out = socket.getOutputStream();
+            out.write(message.getBytes());
+            out.flush();
         }
     }
 
