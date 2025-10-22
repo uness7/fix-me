@@ -17,7 +17,7 @@ public class App {
 
     public static void init() {
         String path = "/home/waizi/Desktop/42PostCommonCore/fix-me/fixme/instruments.conf";
-        Utils.getInstruments(path);
+        instruments = Utils.getInstruments(path);
     }
 
     public static void launchSimulator() {
