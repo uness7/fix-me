@@ -62,4 +62,14 @@ public class FixMessage {
 
         return "";
     }
+
+    ///  the Router will use this function to validate the checksum
+    public boolean isChecksumValid(int value, int messageLength) {
+        return value == messageLength % 256;
+    }
+
+    ///  Brokers & Markets will use this function to generate the checksum
+    public String getChecksum(int len) {
+        return Integer.toString(len % 256);
+    }
 }

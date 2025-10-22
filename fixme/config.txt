@@ -1,0 +1,28 @@
+# Format: SYMBOL,COMPANY,SECTOR,PRICE,QUANTITY,ISTRADING
+AAPL,Apple Inc.,Technology,192,1000,true
+MSFT,Microsoft Corp.,Technology,330,900,true
+AMZN,Amazon.com Inc.,Consumer Discretionary,145,1200,true
+GOOGL,Alphabet Inc. (Class A),Communication Services,135,800,true
+GOOG,Alphabet Inc. (Class C),Communication Services,133,800,true
+TSLA,Tesla Inc.,Consumer Discretionary,255,700,true
+NVDA,NVIDIA Corp.,Technology,410,600,true
+META,Meta Platforms Inc.,Communication Services,305,500,true
+NFLX,Netflix Inc.,Communication Services,430,400,true
+ADBE,Adobe Inc.,Technology,520,350,true
+INTC,Intel Corp.,Technology,34,2000,true
+CSCO,Cisco Systems Inc.,Technology,48,1500,true
+AMD,Advanced Micro Devices,Technology,102,1000,true
+PEP,PepsiCo Inc.,Consumer Staples,172,600,true
+PYPL,PayPal Holdings Inc.,Financial Technology,61,800,true
+COST,Costco Wholesale Corp.,Consumer Staples,570,400,true
+QCOM,Qualcomm Inc.,Technology,110,800,true
+TXN,Texas Instruments Inc.,Technology,158,700,true
+AVGO,Broadcom Inc.,Semiconductors,850,300,true
+AMAT,Applied Materials Inc.,Semiconductors,144,700,true
+SBUX,Starbucks Corp.,Consumer Discretionary,95,900,true
+BKNG,Booking Holdings Inc.,Consumer Services,3100,200,true
+INTU,Intuit Inc.,Financial Technology,515,400,true
+MRNA,Moderna Inc.,Biotechnology,105,300,true
+REGN,Regeneron Pharmaceuticals,Biotechnology,840,200,true
+VRTX,Vertex Pharmaceuticals,Biotechnology,410,250,true
+
