@@ -3,6 +3,7 @@ package com.fortytwo.fixme;
 
 import com.fortytwo.fixme.broker.Broker;
 import com.fortytwo.fixme.common.Instrument;
+import com.fortytwo.fixme.common.Utils;
 import com.fortytwo.fixme.router.Router;
 
 import java.io.IOException;
@@ -15,24 +16,8 @@ public class App {
     private volatile static LinkedList<Instrument> instruments = new LinkedList<>();
 
     public static void init() {
-        // TODO create a function that constructs the list of instruments from a CSV file
-        Instrument msft = new Instrument(
-                "MSFT",
-                "Microsoft Inc.",
-                "Technology",
-                90,
-                25,
-                true
-        );
-        Instrument aapl = new Instrument(
-                "AAPL",
-                "Apple Inc.",
-                "Technology",
-                100,
-                20,
-                true
-        );
-        instruments.add(msft);
+        String path = "/home/waizi/Desktop/42PostCommonCore/fix-me/fixme/instruments.conf";
+        Utils.getInstruments(path);
     }
 
     public static void launchSimulator() {
