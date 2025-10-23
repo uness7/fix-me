@@ -5,6 +5,24 @@ import java.util.Arrays;
 
 public class Main {
 
+    public static void ex06() {
+        String message = "Hello World!";
+        byte[] messageInBytes = message.getBytes();
+
+        ByteBuffer buffer = ByteBuffer.allocate(messageInBytes.length + Integer.BYTES);
+        buffer.putInt(messageInBytes.length);
+        buffer.put(messageInBytes);
+
+        // Switch to reading mode
+        buffer.flip();
+
+        // Reconstructing the message knowing in advance its size
+        int messageLength = buffer.getInt();
+        byte[] messageReconstructedInBytes = new byte[messageLength];
+        buffer.get(messageReconstructedInBytes);
+        System.out.println(new String(messageReconstructedInBytes)); // Message is reconstructed successfully
+    }
+
     // understanding relative and absolute positioning
     public static void ex5() {
         ByteBuffer buffer = ByteBuffer.allocate(5);
@@ -39,8 +57,9 @@ public class Main {
 
 
     public static void main(String[] args) {
+        ex06();
 //        ex5();
-        ex4();
+//        ex4();
         //ByteBuffer buffer = ByteBuffer.allocate(1024);
 //        int x = 23;
 //        long y = 999999999L;
