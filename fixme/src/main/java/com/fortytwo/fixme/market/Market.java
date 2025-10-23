@@ -8,35 +8,77 @@ import java.awt.desktop.OpenURIEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Set;
 
 public class Market {
     public LinkedList<Instrument> instrumentsList;
     private String name;
-    private int dataSizeReceived;
-    private byte[] data;
-    private Socket socket;
 
-    public Market(String name, LinkedList<Instrument> instrumentsList) throws IOException {
+    public Market(String name, LinkedList<Instrument> instrumentsList) {
         this.name = name;
         this.instrumentsList = instrumentsList;
     }
 
-    public void accept() throws IOException {
-        socket = new Socket("localhost", 5001);
-        if (socket.getLocalPort() == 5001) {
-            System.out.println("Receiving requests from the Router");
-            data = new byte[1024];
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
-            while ((dataSizeReceived = inputStream.read(data)) != -1) {
-                outputStream.write(data, 0, dataSizeReceived);
+    public void activate() throws IOException {
+        int PORT = 5001;
+        String HOST = "localhost";
+        Selector selector = Selector.open();
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        socketChannel.connect(new InetSocketAddress(HOST, PORT));
+        System.out.println("[Market]: " + name + " trying to connect to Router");
+        socketChannel.register(selector, SelectionKey.OP_CONNECT);
+
+        while (true) {
+            if (selector.select() == 0) {
+                continue;
             }
-            String res = handleRequest(Arrays.toString(data));
-        } else {
-            throw new IOException("Cannot connect unless it's a Router");
+            Set<SelectionKey> keys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = keys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                if (key.isConnectable()) {
+                    SocketChannel client = (SocketChannel) key.channel();
+                    if (client.finishConnect()) {
+                        System.out.println("[Market]: " + name + " connected successfully to Router");
+                        key.interestOps(SelectionKey.OP_READ |  SelectionKey.OP_WRITE);
+                    } else {
+                        System.err.println("[Market]: Failed to connect.");
+                        return;
+                    }
+                } else if (key.isReadable()) {
+                    SocketChannel clientChannel = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    int bytesRead = clientChannel.read(buffer);
+                    if (bytesRead > 0) {
+                        buffer.flip();
+                        byte[] data = new byte[buffer.remaining()];
+                        buffer.get(data);
+                        System.out.println("[Market]: Received message from router: " + new String(data));
+                    } else if (bytesRead == -1) {
+                        System.out.println("[Market]: Router has closed the connection.");
+                        clientChannel.close();
+                        return;
+                    }
+                } else if (key.isWritable()) {
+                    SocketChannel clientChannel = (SocketChannel) key.channel();
+                    String message = "Hello from Market" + name;
+                    ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+                    clientChannel.write(buffer);
+                    System.out.println("[Market]: Sent message: '" + message + "'");
+                    key.interestOps(SelectionKey.OP_READ);
+                }
+                iterator.remove();
+            }
         }
     }
 
@@ -48,18 +90,11 @@ public class Market {
         this.name = value;
     }
 
-    private String handleRequest(String request) {
-        return "";
-        /*
-        if (request.isValid()) {
-            System.out.println("Market is checking the request");
-            // check if the requested instrument is traded, available
-            // once these checks are done, send back an Executed Message
-            // else send a RejectedMessage with a description message
-        } else {
-            // or maybe a custom exception
-            throw new IllegalArgumentException("Invalid request");
-        }
-         */
+    private void handleWriteEvent() {
+        System.out.println("handle write event");
+    }
+
+    private void handleReadEvent() {
+        System.out.println("handle read event");
     }
 }
