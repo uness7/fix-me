@@ -23,9 +23,20 @@ public class Router {
         return instance;
     }
 
-    public void activate() throws IOException {
+    public void listenForConnections() throws RuntimeException, IOException {
+                activate(5001);
+//        new  Thread(() -> {
+//            try {
+//                activate(5000);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+    }
+
+    private void activate(int port) throws IOException {
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.bind(new InetSocketAddress(5000));
+        serverSocketChannel.bind(new InetSocketAddress(port));
         serverSocketChannel.configureBlocking(false);
         Selector selector = Selector.open();
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -42,6 +53,7 @@ public class Router {
                     ServerSocketChannel serverSocketChannel1 = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = serverSocketChannel1.accept();
                     socketChannel.configureBlocking(false);
+                    // once the server establishes a connection with a client, we should send it an Id
                     socketChannel.register(selector, SelectionKey.OP_READ);
                     System.out.println("[Router]: New connection established.");
                 } else if (key.isReadable()) {
