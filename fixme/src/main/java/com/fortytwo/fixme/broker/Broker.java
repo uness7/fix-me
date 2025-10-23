@@ -6,66 +6,86 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
 
 public class Broker {
     private final String HOST = "localhost";
-    private final int PORT = Router.getInstance().BROKER_PORT;
+    private final int PORT = 5000;
     private final String name;
-    private Socket socket = null;
     private long uniqueId = 1;
 
     public Broker(String name) {
         this.name = name;
     }
 
-    public void init() throws IOException {
-        System.out.println("Establishing connection with Router");
-        socket = new Socket(HOST, PORT);
+    public void activate() throws IOException {
+        Selector selector = Selector.open();
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        socketChannel.connect(new InetSocketAddress(HOST, PORT));
+        System.out.println("[Broker]: " + name + " trying to connect to Router");
+        socketChannel.register(selector, SelectionKey.OP_CONNECT);
+
+        while (true) {
+            if (selector.select() == 0) {
+                continue;
+            }
+            Set<SelectionKey> keys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = keys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                if (key.isConnectable()) {
+                    SocketChannel client = (SocketChannel) key.channel();
+                    if (client.finishConnect()) {
+                        System.out.println("[Broker]: " + name + " connected successfully to Router");
+                        key.interestOps(SelectionKey.OP_READ |  SelectionKey.OP_WRITE);
+                    } else {
+                        System.err.println("[Broker]: Failed to connect.");
+                        return;
+                    }
+                } else if (key.isReadable()) {
+                    SocketChannel clientChannel = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    int bytesRead = clientChannel.read(buffer);
+                    if (bytesRead > 0) {
+                        buffer.flip();
+                        byte[] data = new byte[buffer.remaining()];
+                        buffer.get(data);
+                        System.out.println("[Broker]: Received message from router: " + new String(data));
+                    } else if (bytesRead == -1) {
+                        System.out.println("[Broker]: Router has closed the connection.");
+                        clientChannel.close();
+                        return;
+                    }
+                } else if (key.isWritable()) {
+                    SocketChannel clientChannel = (SocketChannel) key.channel();
+                    String message = "Hello from Broker " + name;
+                    ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
+                    clientChannel.write(buffer);
+                    System.out.println("[Broker]: Sent message: '" + message + "'");
+                    key.interestOps(SelectionKey.OP_READ);
+                }
+                iterator.remove();
+            }
+        }
     }
 
-    /*
-        This would take an order of type Request that contains ID, message in FIX, timestamp of creation,
-        this request object will be used by the Router to easily create the Routing table.
-    *  */
     public void makeOrder(String message) throws IOException {
-        if (socket != null && !socket.isClosed() && this.uniqueId != -1) {
-            OutputStream out = socket.getOutputStream();
-            out.write(message.getBytes());
-            out.flush();
-        }
     }
 
     public void listenForAckMessage() throws IOException {
-        final int dataLength = 21;
-        byte[] data = new byte[dataLength];
-
-        if (socket.isConnected()) {
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            OutputStream out = socket.getOutputStream();
-            in.read(data, 0, dataLength);
-
-            String message = new String(data);
-            System.out.println("Broker received  " + message);
-            System.out.println("Broker received an Id.");
-
-            out.flush();
-            //in.close();
-            //out.close();
-        }
-        System.out.println("Exiting ackMessage()");
     }
 
     public void sendBuyRequest(String message) throws IOException {
-        System.out.println("Sending request to broker " + message);
-        if (socket.isConnected()  && this.uniqueId != -1) {
-            System.out.println("We can send a buy request under these circumstances. " + message);
-            OutputStream out = socket.getOutputStream();
-            out.write(message.getBytes());
-            out.flush();
-        }
     }
 
     public long getUniqueId() {

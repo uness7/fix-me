@@ -4,12 +4,14 @@ package com.fortytwo.fixme;
 import com.fortytwo.fixme.broker.Broker;
 import com.fortytwo.fixme.common.Instrument;
 import com.fortytwo.fixme.common.Utils;
+import com.fortytwo.fixme.market.Market;
 import com.fortytwo.fixme.router.Router;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class App {
@@ -22,27 +24,18 @@ public class App {
 
     public static void launchSimulator() {
         Router router = Router.getInstance();
-        router.activate();
+        try {
+            router.activate();
+        } catch (IOException e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
     }
 
-    public static void main( String[] args ) throws IOException {
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        Runnable t1 = App::launchSimulator;
-        Runnable t2 = () -> {
-            Broker br = new Broker("br");
-            try {
-                br.init();
-                Thread.sleep(TimeUnit.SECONDS.toMillis(1));
-                br.listenForAckMessage();
-
-                if (br.getUniqueId() != -1) {
-                    br.sendBuyRequest("Hello");
-                }
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        };
-        executor.submit(t1);
-        executor.submit(t2);
+    public static void main( String[] args ) throws IOException, InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        new Thread(App::launchSimulator).start();
+        Thread.sleep(500);
+        Broker br = new Broker("br");
+        br.activate();
     }
 }
