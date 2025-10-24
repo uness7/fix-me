@@ -79,7 +79,7 @@ public class Utils {
     }
 
     /// Takes in a config file that contains Instruments and returns a list.
-    public LinkedList<Instrument> getInstruments(String path) {
+    public static LinkedList<Instrument> getInstruments(String path) {
         LinkedList<Instrument> instruments = new LinkedList<>();
         String name;
         String company;
