@@ -9,6 +9,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Router {
     private static Router instance = null;
@@ -23,18 +25,8 @@ public class Router {
         return instance;
     }
 
-    public void listenForConnections() throws RuntimeException, IOException {
-                activate(5001);
-//        new  Thread(() -> {
-//            try {
-//                activate(5000);
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//        });
-    }
-
     private void activate(int port) throws IOException {
+        System.out.println("[Router]: listening on port " + port);
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(port));
         serverSocketChannel.configureBlocking(false);
@@ -53,25 +45,31 @@ public class Router {
                     ServerSocketChannel serverSocketChannel1 = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = serverSocketChannel1.accept();
                     socketChannel.configureBlocking(false);
-                    // once the server establishes a connection with a client, we should send it an Id
                     socketChannel.register(selector, SelectionKey.OP_READ);
-                    System.out.println("[Router]: New connection established.");
+                    System.out.println("[Router]: New connection established from " + socketChannel.getRemoteAddress());
                 } else if (key.isReadable()) {
-                    SocketChannel clientChannel = (SocketChannel) key.channel();
-                    ByteBuffer buffer = ByteBuffer.allocate(1024);
-                    int bytesRead = clientChannel.read(buffer);
-                    if (bytesRead > 0) {
-                        buffer.flip();
-                        byte[] data = new byte[buffer.remaining()];
-                        buffer.get(data);
-                        System.out.println("[Router]: Received a message from a client: " + new String(data));
-                    } else if (bytesRead == -1) {
-                        System.out.println("Client disconnected.");
-                        clientChannel.close();
-                    }
+                } else if (key.isWritable()) {
                 }
                 keyIterator.remove();
             }
         }
+    }
+
+    public static void main(String[] args) {
+        Router router = Router.getInstance();
+        new Thread(() -> {
+            try {
+                router.activate(5000);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }).start();
+        new Thread(() -> {
+            try {
+                router.activate(5001);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }).start();
     }
 }

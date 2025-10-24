@@ -99,4 +99,13 @@ public class Broker {
     public String getName() {
         return this.name;
     }
+
+    public static void main(String[] args) {
+        Broker br = new Broker("NASDAQ");
+        try {
+            br.activate();
+        } catch (IOException e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
+    }
 }

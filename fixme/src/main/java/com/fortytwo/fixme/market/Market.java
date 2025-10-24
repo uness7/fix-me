@@ -1,6 +1,7 @@
 package com.fortytwo.fixme.market;
 
 import com.fortytwo.fixme.common.Instrument;
+import com.fortytwo.fixme.common.Utils;
 import com.fortytwo.fixme.router.Request;
 import com.fortytwo.fixme.router.Router;
 
@@ -96,5 +97,14 @@ public class Market {
 
     private void handleReadEvent() {
         System.out.println("handle read event");
+    }
+
+    public static void main(String[] args) {
+        Market market = new Market("mr", Utils.getInstruments("/waizi/home/Desktop/42PostCommonCore/fix-me/fixe-me/config.tt"));
+        try {
+            market.activate();
+        } catch (IOException e) {
+            System.out.println("Exception " + e.getMessage());
+        }
     }
 }
