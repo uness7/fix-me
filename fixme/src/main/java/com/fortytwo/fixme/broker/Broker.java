@@ -47,7 +47,7 @@ public class Broker {
                     SocketChannel client = (SocketChannel) key.channel();
                     if (client.finishConnect()) {
                         System.out.println("[Broker]: " + name + " connected successfully to Router");
-                        key.interestOps(SelectionKey.OP_READ |  SelectionKey.OP_WRITE);
+                        key.interestOps(SelectionKey.OP_READ);
                     } else {
                         System.err.println("[Broker]: Failed to connect.");
                         return;
@@ -66,13 +66,17 @@ public class Broker {
                         clientChannel.close();
                         return;
                     }
+                    key.interestOps(SelectionKey.OP_WRITE);
                 } else if (key.isWritable()) {
-                    SocketChannel clientChannel = (SocketChannel) key.channel();
-                    String message = "Hello from Broker " + name;
-                    ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
-                    clientChannel.write(buffer);
-                    System.out.println("[Broker]: Sent message: '" + message + "'");
+                    SocketChannel socket = (SocketChannel) key.channel();
+                    String message = "[Broker]: Great doing business with you Router";
+                    byte[] arr = message.getBytes();
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(arr.length);
+                    byteBuffer.put(arr);
+                    byteBuffer.flip();
+                    socket.write(byteBuffer);
                     key.interestOps(SelectionKey.OP_READ);
+                    socket.close();
                 }
                 iterator.remove();
             }

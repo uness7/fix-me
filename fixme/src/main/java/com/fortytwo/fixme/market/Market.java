@@ -70,13 +70,17 @@ public class Market {
                         clientChannel.close();
                         return;
                     }
+                    key.interestOps(SelectionKey.OP_WRITE);
                 } else if (key.isWritable()) {
-                    SocketChannel clientChannel = (SocketChannel) key.channel();
-                    String message = "Hello from Market" + name;
-                    ByteBuffer buffer = ByteBuffer.wrap(message.getBytes());
-                    clientChannel.write(buffer);
-                    System.out.println("[Market]: Sent message: '" + message + "'");
+                    SocketChannel socket = (SocketChannel) key.channel();
+                    String message = "[Market]: Great doing business with you Router";
+                    byte[] arr = message.getBytes();
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(arr.length);
+                    byteBuffer.put(arr);
+                    byteBuffer.flip();
+                    socket.write(byteBuffer);
                     key.interestOps(SelectionKey.OP_READ);
+                    socket.close();
                 }
                 iterator.remove();
             }

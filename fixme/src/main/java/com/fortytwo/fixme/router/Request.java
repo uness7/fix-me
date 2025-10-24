@@ -1,6 +1,6 @@
 package com.fortytwo.fixme.router;
 
-import com.fortytwo.fixme.router.OrderType.OrderType;
+import com.fortytwo.fixme.common.OrderType;
 
 public class Request {
     private long senderId;

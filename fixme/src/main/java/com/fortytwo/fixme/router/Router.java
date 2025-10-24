@@ -45,10 +45,33 @@ public class Router {
                     ServerSocketChannel serverSocketChannel1 = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = serverSocketChannel1.accept();
                     socketChannel.configureBlocking(false);
-                    socketChannel.register(selector, SelectionKey.OP_READ);
+                    socketChannel.register(selector, SelectionKey.OP_WRITE);
                     System.out.println("[Router]: New connection established from " + socketChannel.getRemoteAddress());
-                } else if (key.isReadable()) {
                 } else if (key.isWritable()) {
+                    SocketChannel socket = (SocketChannel) key.channel();
+                    String message = "Welcome to the Router!";
+                    byte[] arr = message.getBytes();
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(arr.length);
+                    byteBuffer.put(arr);
+                    byteBuffer.flip();
+                    socket.write(byteBuffer);
+                    key.interestOps(SelectionKey.OP_READ);
+                } else if (key.isReadable()) {
+                    SocketChannel socket = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    int bytesRead = socket.read(buffer);
+                    if (bytesRead == -1) {
+                        System.out.println("[Router]: Connection closed");
+                        socket.close();
+                        return;
+                    } else {
+                        buffer.flip();
+                        byte[] arr = new byte[buffer.remaining()];
+                        buffer.get(arr);
+                        System.out.println("[Router]: Received message; " + new String(arr));
+//                        key.interestOps(SelectionKey.OP_WRITE);
+                        socket.close();
+                    }
                 }
                 keyIterator.remove();
             }
