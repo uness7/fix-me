@@ -88,3 +88,29 @@ correspondingly.
 The design of this project should make us able to easily test and mock each component. Furthermore,
 we should be able to be able to extend it; create new different markets and different brokers. We could
 use the factory method design pattern here.
+
+
+/// Current state of the project
+- Router is listening, using two threads, on two ports.
+- The Router sends "Welcome to the Router!".
+- The client receives "Welcome to the Router", and changes from reading state to writing state.
+- The Router receives some string from the client and then closes the connection.
+
+/// Expected behavior (next step)
+- The Router sends "Welcome to the Router!"
+- Router is listening, using two threads, on two ports.
+- Client sends some string.
+- Router receives some string.
+- Router sends back some string.
+
+// We need to control state in the Router??????
+Once I receive something for clients, it needs to go through a chain of responsibilities; thus, we need CoR pattern!
+First, we need to verify the checksum.
+Then, I have to see if the Router can recognize the destination.
+Then, I just have to forward the message. No business logic is needed.
+
+// The process
+If there's a key.isWritable() == true, then we need to check is it coming from a broker or a market.
+If it is coming from a broker, then it is a request that has to go through some processing.
+If it's coming from a market, then it is a response to be forwarded to the corresponding broker.
+

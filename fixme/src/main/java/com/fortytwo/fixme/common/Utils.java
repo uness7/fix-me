@@ -11,6 +11,11 @@ import java.util.LinkedList;
 **  This class will contain some utils functions, they will be used by the Router to decode FIX messages.
 */
 public class Utils {
+    public final static String HOST = "localhost";
+    public final static int BROKER_PORT = 5000;
+    public final static int MARKET_PORT = 5001;
+    public final static int BUFFSIZE = 1024;
+
     public static String[] getPairs(String message) {
         return message.split("\\|");
     }
