@@ -10,21 +10,11 @@ import java.util.LinkedList;
 
 class Main {
     public static void main(String[] args) {
-		LinkedList<Instrument> instruments = 
-			Utils.getInstruments("config.txt");
-		ListIterator<Instrument> it = instruments.listIterator();
+        String CONF_FILE = "config.txt";
 
-		while (it.hasNext()) {
-			Instrument ins = it.next();
-			System.out.println(ins.toString());
-		}
-
-		/*
-        try {
-            mr.activate();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+		LinkedList<Instrument> instruments = Utils.getInstruments(CONF_FILE);
+        for (Instrument ins : instruments) {
+            System.out.println(ins.toString());
         }
-		*/
     }
 }
