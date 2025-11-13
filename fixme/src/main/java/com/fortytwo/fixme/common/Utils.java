@@ -5,6 +5,7 @@ import com.fortytwo.fixme.router.MessageType;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 /*
@@ -15,6 +16,14 @@ public class Utils {
     public final static int BROKER_PORT = 5000;
     public final static int MARKET_PORT = 5001;
     public final static int BUFFSIZE = 1024;
+
+	public static ByteBuffer addHeader(byte[] message) {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES + message.length);
+		byteBuffer.putInt(message.length);
+		byteBuffer.put(message);
+		byteBuffer.flip();
+		return byteBuffer;
+	}
 
     public static String[] getPairs(String message) {
         return message.split("\\|");
