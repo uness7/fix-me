@@ -114,3 +114,8 @@ If there's a key.isWritable() == true, then we need to check is it coming from a
 If it is coming from a broker, then it is a request that has to go through some processing.
 If it's coming from a market, then it is a response to be forwarded to the corresponding broker.
 
+/// Update
+The Router can now listen on two ports simultaneously.
+The Router, once it receives an incoming request from a client, sends an id in fix format (for example, id=0238ad423fad34343)
+The Router has a queue of messages coming from Brokers.
+The idea od Queues is a great idea to handle multiple messages

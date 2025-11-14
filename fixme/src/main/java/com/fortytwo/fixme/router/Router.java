@@ -1,6 +1,7 @@
 package com.fortytwo.fixme.router;
 
 import com.fortytwo.fixme.common.Client;
+import com.fortytwo.fixme.common.FIXMessage;
 import com.fortytwo.fixme.common.Utils;
 import jdk.jshell.execution.Util;
 
@@ -43,10 +44,9 @@ public class Router {
         marketServerSocketChannel.configureBlocking(false);
         marketServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-        ByteBuffer buffer = ByteBuffer.allocate(Utils.BUFFSIZE);
-
         while (true) {
-            if (selector.select() == 0) continue;
+            if (selector.select() == 0)
+                continue;
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
             while (keyIterator.hasNext()) {
@@ -60,7 +60,7 @@ public class Router {
                             socketChannel.getRemoteAddress());
                 } else if (key.isWritable()) {
                     SocketChannel socket = (SocketChannel) key.channel();
-                    send("Welcome to Router!", socket);
+                    send("id=8908989", socket);
                     key.interestOps(SelectionKey.OP_READ);
                 } else if (key.isReadable()) {
                     SocketChannel socket = (SocketChannel) key.channel();
@@ -88,10 +88,7 @@ public class Router {
     }
 
     private void send(String message, SocketChannel socket) throws IOException {
-        byte[] arr = message.getBytes();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(arr.length);
-        byteBuffer.put(arr);
-        byteBuffer.flip();
+        ByteBuffer byteBuffer = FIXMessage.addHeader(message.getBytes());
         socket.write(byteBuffer);
     }
 

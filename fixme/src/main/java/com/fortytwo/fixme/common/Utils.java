@@ -17,17 +17,7 @@ public class Utils {
     public final static int MARKET_PORT = 5001;
     public final static int BUFFSIZE = 1024;
 
-	public static ByteBuffer addHeader(byte[] message) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES + message.length);
-		byteBuffer.putInt(message.length);
-		byteBuffer.put(message);
-		byteBuffer.flip();
-		return byteBuffer;
-	}
 
-    public static String[] getPairs(String message) {
-        return message.split("\\|");
-    }
 
     ///  ACK message should only contain one pair, for instance, an ack message should only contain 35=121212.
     public static boolean isAckFixMessage(String[] pairs) {
